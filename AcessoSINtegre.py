@@ -6,8 +6,7 @@ CHROME_PATH = 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
 CHROMEDRIVER_PATH = 'C:/Users/Mateus Mendonca/Downloads/chromedriver.exe'
 WINDOW_SIZE = "1920,1080"
 
-options = Options()  
-#options.add_argument("--headless")  
+options = Options()
 options.add_argument("--window-size=%s" % WINDOW_SIZE)
 options.binary_location = CHROME_PATH
 
@@ -17,11 +16,10 @@ driver = webdriver.Chrome(executable_path=CHROMEDRIVER_PATH, options=options)
 
 
 # options = webdriver.ChromeOptions()
-# options.add_argument('--headless')
 # driver = webdriver.Chrome("/usr/lib/chromium-browser/chromedriver")
 # driver = webdriver.Chrome(executable_path='C:/Users/mateus.mendonca/Downloads/chromedriver.exe', chrome_options=options)
 
-driver.get('https://sintegre.ons.org.br/sites/9/13/82/Produtos/238/Modelos_Chuva_Vazao_20191209.zip')
+driver.get('https://sintegre.ons.org.br/')
 assert 'ONS' in driver.title
 
 elem = driver.find_element_by_name('username')
