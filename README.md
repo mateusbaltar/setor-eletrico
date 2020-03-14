@@ -1,2 +1,2 @@
-# pacto-energia
-Repositório de arquivos da Pacto Energia.
+# Setor Eletrico Brasileiro
+Repositório de arquivos do Setor Eletrico.
