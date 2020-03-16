@@ -16,13 +16,6 @@ def chrome_driver():
 
     driver = webdriver.Chrome(executable_path=CHROMEDRIVER_PATH, options=options)  
 
-    # driver = webdriver.Chrome("/usr/lib/chromium-browser/chromedriver")
-
-
-    # options = webdriver.ChromeOptions()
-    # driver = webdriver.Chrome("/usr/lib/chromium-browser/chromedriver")
-    # driver = webdriver.Chrome(executable_path='C:/Users/mateus.mendonca/Downloads/chromedriver.exe', chrome_options=options)
-
     driver.get('https://sintegre.ons.org.br/')
     assert 'ONS' in driver.title
 
