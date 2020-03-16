@@ -5,6 +5,9 @@ from selenium.webdriver.chrome.options import Options
 def download_ipdo(driver):
     driver.get('ipdo_path')
 
+def download_acomph(driver):
+    driver.get('acomph_path')
+
 def chrome_driver():
     CHROME_PATH = 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
     CHROMEDRIVER_PATH = 'C:/Users/Mateus Mendonca/Downloads/chromedriver.exe'
@@ -27,6 +30,7 @@ def chrome_driver():
     login_attempt.click()
 
     download_ipdo(driver)
+    download_acomph(driver)
 
     input('Aguarde...')
 
