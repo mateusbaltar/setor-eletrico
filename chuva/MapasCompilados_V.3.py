@@ -17,6 +17,11 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 
+# Na Versao 3.0:
+# - Inserido o modelo de previsao ECMWF
+# - Modificada a matriz do modelo de previsao ETA40, com compreensao de lista
+# - Modificada a grade do modelo de previsao GEFS
+
 def conv_100_100_x_40_40(path, arq_bin):
     #x_eta_init = -83.0
     #x_eta_step = 0.4
@@ -185,6 +190,7 @@ def gera_mapas(t1, t2, lgd, path, file_name, folder, img_name, x_def = str(), y_
     ctl.write('PREC    0  99     Total  24h Precip.        (m)\n')
     ctl.write('ENDVARS\n')
     ctl.close()
+
     #Cria arquivo GS (Script)
     script_mapas =  open('C:/OpenGrADS-2.2/Contents/Resources/SampleDatasets/script_mapas.gs', 'wt')
     script_mapas.writelines("'reinit'\n")
@@ -230,7 +236,7 @@ def gera_mapas(t1, t2, lgd, path, file_name, folder, img_name, x_def = str(), y_
     script_mapas.writelines("'set line 30 1 1 0'\n") # Define a cor da linha das bacias hidrográficas
     script_mapas.writelines("'draw shp bacias-hidrograficas'\n") # Abre o arquivo bacias-hidrograficas.shp com o shape das bacias
     #script_mapas.writelines("'draw xlab %s'\n" % lgd)
-    script_mapas.writelines("'draw title %s\ %s\%s'\n" %(lgd, t1, t2))
+    script_mapas.writelines("'draw title {}\ {}\{}'\n".format(lgd, t1, t2))
     script_mapas.writelines("'printim %s/%s.png x600 y800'\n" %(os.path.join(os.path.dirname(__file__), folder), img_name[0:len(img_name) - 4]))
     script_mapas.close()
     os.chdir('C:/OpenGrADS-2.2/Contents/Resources/SampleDatasets/')
@@ -493,6 +499,11 @@ def str_dt(opt = 0):
         date_aux = datetime.date.fromordinal(opt)
     return ('00' + str(date_aux.day))[-2:] + '/' + ('00' + str(date_aux.month))[-2:] + '/' + str(date_aux.year)
 
+def verify_folder(folder):
+    #Verifica se existe a pasta de execução
+    if not os.path.exists(os.path.join(os.path.dirname(__file__), folder)):
+        os.makedirs(os.path.join(os.path.dirname(__file__), folder))
+
 def upload_zips(path_name):
     time.sleep(15)
     folder_list = os.listdir(path_name)
@@ -566,11 +577,6 @@ def rev():
         next_rev = rev + 1
     return (rev, next_rev)
 
-def tabela_de_chuva(opt, out_path):
-    #download_chuva_eta40_cptec(opt, out_path)
-    os.chdir(os.path.join(os.path.dirname(__file__), out_path))
-    os.startfile('convchuva.exe')
-
 #Funcoes para arquivo de log
 def edit_log_file(descrpt, info):
     file = open(os.path.join(os.path.dirname(__file__), 'log.txt'), 'rt')
@@ -638,7 +644,7 @@ def upload_mapas():
             #print("      Arquivo %s uploaded" %fn)
             file.close()
         ftp.quit()
-        print('      Upload: OK')
+        print('      Upload: {} OK'.format(fn))
         edit_log_file('Upload', '')
         for fn in upload_list:
             os.remove(os.path.join(os.path.dirname(__file__), fn))
@@ -668,9 +674,10 @@ def mapas():
             elem = driver.find_element_by_name('password')
             elem.send_keys('Energia2019' + Keys.RETURN)
 
-            driver.get('https://sintegre.ons.org.br/sites/9/38/Documents/images/operacao_integrada/meteorologia/eta/Eta40_precipitacao10d.zip')
-            driver.get('https://sintegre.ons.org.br/sites/9/38/Documents/images/operacao_integrada/meteorologia/global/GEFS_precipitacao14d.zip')
-            driver.get('https://sintegre.ons.org.br/sites/9/38/Documents/images/operacao_integrada/meteorologia/ecmwf/ECMWF_precipitacao14d.zip')
+            PATH = 'https://sintegre.ons.org.br/sites/9/38/Documents/images/operacao_integrada/meteorologia/'
+            driver.get(PATH + 'eta/Eta40_precipitacao10d.zip')
+            driver.get(PATH + 'global/GEFS_precipitacao14d.zip')
+            driver.get(PATH + 'ecmwf/ECMWF_precipitacao14d.zip')
 
             upload_zips('C:/Users/mateus.mendonca/Downloads')
             driver.quit()
@@ -678,8 +685,11 @@ def mapas():
             driver.quit()
             print('Erro - acesso_SINtegre')
 
+        verify_folder('Prev_Quinta')
+
         #Baixar e somar dados de chuva ocorrida
         if (log_date('Chuva Ocorrida') != today()):
+            verify_folder('Ocorrida')
             if (download_chuva_ocorrida_cptec('Ocorrida') == 1):
                 if (soma_arq_bin('Ocorrida', create_name_list(0), 'Ocorrida', 'soma_ocorrida.bin', 18997) == 1):
                     print('      Chuva Ocorrida: OK')
@@ -687,6 +697,7 @@ def mapas():
         
         #Baixar e somar dados de previsão de chuva ETA 40Km
         if (log_date('Chuva ETA 40') != today()):
+            verify_folder('Prev_ETA_ONS')
             if (download_chuva_eta40_ons('Prev_ETA_ONS', 'Eta40_precipitacao10d.zip') == 1):
                 if (soma_arq_bin('Prev_ETA_ONS', create_name_list(1), 'Prev_ETA_ONS', 'soma_eta40_1.bin', 18997) == 1):
                     if (soma_arq_bin('Prev_ETA_ONS', create_name_list(2), 'Prev_ETA_ONS', 'soma_eta40_2.bin', 18997) == 1):
@@ -698,6 +709,7 @@ def mapas():
 
         #Baixar e somar dados de previsão de chuva GEFS
         if (log_date('Chuva GEFS') != today()):
+            verify_folder('Prev_GEFS_ONS')
             if (download_chuva_gefs_ons('Prev_GEFS_ONS', 'GEFS_precipitacao14d.zip') == 1):
                 if (soma_arq_bin('Prev_GEFS_ONS', create_name_list(3), 'Prev_GEFS_ONS', 'soma_gefs_1.bin', 18997) == 1):
                     if (soma_arq_bin('Prev_GEFS_ONS', create_name_list(4), 'Prev_GEFS_ONS', 'soma_gefs_2.bin', 18997) == 1):
@@ -709,6 +721,7 @@ def mapas():
 
         #Baixar e somar dados de previsão de chuva ECMWF
         if (log_date('Chuva ECMWF') != today()):
+            verify_folder('Prev_ECMWF_ONS')
             if (download_chuva_ecmwf_ons('Prev_ECMWF_ONS', 'ECMWF_precipitacao14d.zip') == 1):
                 if (soma_arq_bin('Prev_ECMWF_ONS', create_name_list(5), 'Prev_ECMWF_ONS', 'soma_ecmwf_1.bin', 113176) == 1):
                     if (soma_arq_bin('Prev_ECMWF_ONS', create_name_list(6), 'Prev_ECMWF_ONS', 'soma_ecmwf_2.bin', 113176) == 1):
@@ -777,6 +790,9 @@ def mapas():
             print('      Mapas_ECMWF: OK')
             edit_log_file('Mapas_ECMWF', '')
 
+        #Faz o upload dos mapas gerados
+        upload_mapas() 
+
         #Atualiza log dos mapas
         condicoes = [
             log_date('Mapas_Ocorrida') == today(),
@@ -787,9 +803,6 @@ def mapas():
         if all(condicoes):
             print('      Mapas: OK')
             edit_log_file('Mapas', '')
-
-        #Faz o upload dos mapas gerados
-        upload_mapas() 
 
 def main():
     check_date = 0
