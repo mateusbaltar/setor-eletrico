@@ -21,6 +21,90 @@ from selenium.webdriver.chrome.options import Options
 # - Inserido o modelo de previsao ECMWF
 # - Modificada a matriz do modelo de previsao ETA40, com compreensao de lista
 # - Modificada a grade do modelo de previsao GEFS
+# - Modelo GEFS nao mais por interpolacao
+# - Inserido paradigma POO para os modelos de precipitacao
+
+modelo_eta40 = Modelo('Prev_ETA40_ONS', xdef, ydef, grid, 'Eta40_precipitacao10d.zip') 
+modelo_gefs = Modelo('Prev_GEFS_ONS', xdef, ydef, grid, '.zip') 
+modelo_ecmwf = Modelo('Prev_ECMWF_ONS', xdef, ydef, grid, '.zip') 
+
+class Modelos:
+
+    def __init__(self, modelo, xdef, ydef, grid, url):
+
+        self.nome = modelo
+        self.xdef = xdef
+        self.ydef = ydef
+        self.grid = grid
+        self.url = url
+
+    def __repr__(self):
+
+        print(self.nome)
+
+    def conv_dat_to_bin(self):
+
+        verify_folder(self.nome)
+
+        if (log_date(self.nome) != today()):
+            
+            download_chuva_eta40_ons(self.nome, self.url) == 1):
+
+
+            index_1 = tuple((x * a + i) for i in range(a) for x in range(b))
+            index_2 = tuple(x for x in range(a*b))
+            index = [eta_index, gefs_index]
+            folder = modelo[2]
+            path_list = os.listdir(folder)
+            condicao = 0
+
+            for file in path_list:
+                if file.endswith('.dat'):
+                    eta_file = open(os.path.join(os.path.dirname(__file__), folder, file), 'rt')
+                    file_content = eta_file.readlines()
+                    bin_file = open(os.path.join(os.path.dirname(__file__), folder, file[0:len(file) - 4] + '.bin'), 'wb')
+                    cnt = 0
+                    for _ in range(0, a):
+                        for _ in range(0, b):
+                            if not condicao:
+                                # var = struct.pack('f', float(file_content[index[modelo[3]][cnt]][14:19]))
+                                # print(var, len(var))
+                                condicao += 1
+                            bin_file.write(struct.pack('f', float(file_content[index[modelo[3]][cnt]][14:19])))
+                            cnt += 1
+                    eta_file.close()
+                    bin_file.close()
+
+
+            
+            for i in range(1,2):
+                soma_arq_bin(self.nome, create_name_list(i), 'soma_eta40_1.bin', self.xdef * self.ydef) == 1):
+                #soma_arq_bin('Prev_ETA_ONS', create_name_list(2), 'Prev_ETA_ONS', 'soma_eta40_2.bin', self.xdef * self.ydef) == 1):
+
+            shutil.copyfile(os.path.join(os.path.dirname(__file__), 'Prev_ETA_ONS/soma_eta40_2.bin'), os.path.join(os.path.dirname(__file__), 'Prev_Quinta', nome_aux))
+            print('Chuva ETA 40: OK')
+            edit_log_file('Chuva ETA 40', '')
+
+
+
+
+
+    def sum_arq_bin(self):
+
+    def gera_mapas(self):
+
+        if (log_date(f'Chuva_{self.nome}') == today() and log_date(f'Mapas_{self.nome}') != today()):
+            
+            leg = f'{self.nome}'
+            t1 = 'Previsao Semana Operativa'
+            t2 = d0 + ' a ' + d3
+            gera_mapas(t1, t2, leg, 'Prev_ETA_ONS', 'soma_eta40_1.bin', os.path.join('.'), 'eta_1_' + d_str + '.bin', 'XDEF  121 LINEAR  -82.60   0.40', 'YDEF  157 LINEAR  -50.20   0.40')
+            t1 = 'Previsao Proxima Semana Operativa'
+            t2 = d4 + ' a ' + d5
+            gera_mapas(t1, t2, leg, 'Prev_ETA_ONS', 'soma_eta40_2.bin', os.path.join('.'), 'eta_2_' + d_str + '.bin', 'XDEF  121 LINEAR  -82.60   0.40', 'YDEF  157 LINEAR  -50.20   0.40')
+            print('      Mapas_ETA: OK')
+            edit_log_file('Mapas_ETA', '')
+
 
 def conv_100_100_x_40_40(path, arq_bin):
     #x_eta_init = -83.0
@@ -147,35 +231,6 @@ def conv_100_100_x_40_40(path, arq_bin):
             bin_file.write(struct.pack('f', v))
             tst += 1
 
-def soma_arq_bin(in_files_path, in_files_list, out_file_path, out_file_name, size):
-    if(not os.path.exists(os.path.join(os.path.dirname(__file__), in_files_path))):
-        print('   Erro - soma_arq_bin: Pasta com arquivos de entrada nao existe')
-    else:
-        os.chdir(os.path.join(os.path.dirname(__file__), in_files_path))
-        not_found_error = 0
-        for fn in in_files_list:
-            if (not os.path.isfile(os.path.join(os.path.dirname(__file__), in_files_path, fn))):
-                not_found_error += 1
-                print('   Erro - soma_arq_bin: Arquivo %s nao encontrado' % fn)
-        if(not_found_error > 0):
-            return 0
-        else:
-            soma = []
-            for a in range(size):
-                soma.append(0)
-            for fn in in_files_list:
-                fbin = open(fn, "rb")
-                for cnt_aux in range(0, size):
-                    tmp = struct.unpack('f', fbin.read(4))[0]
-                    soma[cnt_aux] += tmp
-                fbin.close()
-                #print('   Arquivo somado: %s' %fn)
-            fsoma = open(os.path.join(os.path.dirname(__file__), out_file_path, out_file_name), "wb")
-            for a in range(size):
-                fsoma.write(struct.pack('f', soma[a]))
-            fsoma.close()
-            return 1
-
 def gera_mapas(t1, t2, lgd, path, file_name, folder, img_name, x_def = str(), y_def = str()):
     #Cria arquivo CTL
     ctl = open(os.path.join(os.path.dirname(__file__), path, 'ctl.ctl'), 'wt')
@@ -216,8 +271,8 @@ def gera_mapas(t1, t2, lgd, path, file_name, folder, img_name, x_def = str(), y_
     script_mapas.writelines("'clear'\n")
     script_mapas.writelines("'set timelab off'\n")
     script_mapas.writelines("'set grads off'\n")    
-    script_mapas.writelines("'set lon -75 -34.6'\n")
-    script_mapas.writelines("'set lat -35 5'\n")
+    script_mapas.writelines("'set lon -75 -34.6'\n") # Define marcacoes do eixo x do mapa
+    script_mapas.writelines("'set lat -35 5'\n") # Define marcacoes do eixo y do mapa
     script_mapas.writelines("'set map 1 1 4'\n")
     script_mapas.writelines("'set mpdraw on'\n")
     script_mapas.writelines("'set csmooth on'\n")
@@ -225,7 +280,7 @@ def gera_mapas(t1, t2, lgd, path, file_name, folder, img_name, x_def = str(), y_
     script_mapas.writelines("'set clevs  0 1 5 10 15 20 25 30 40 50 75 100 150 200'\n")
     script_mapas.writelines("'set ccols  0 16 17 18 19 20 21 22 23 24 25 26 27 28 15'\n")
     script_mapas.writelines("'d prec'\n")
-    script_mapas.writelines("'cbarn 1 0'\n")
+    script_mapas.writelines("'cbarn 1 0'\n") # Define o tamano e posicao da barra de escala "run cbarn sf vert xmid ymid" , sf   - scale the whole bar 1.0 = original 0.5 half the size, etc., vert - 0 FORCES a horizontal bar = 1 a vertical bar
     script_mapas.writelines("'set lon -80 -35'\n")
     script_mapas.writelines("'set lat -40 10'\n")
     script_mapas.writelines("'set map 1 1 4'\n")
@@ -242,6 +297,17 @@ def gera_mapas(t1, t2, lgd, path, file_name, folder, img_name, x_def = str(), y_
     os.chdir('C:/OpenGrADS-2.2/Contents/Resources/SampleDatasets/')
     os.system('C:/OpenGrADS-2.2/Contents/Cygwin/Versions/2.2.1.oga.1/i686/gradsgui.exe -pcbx script_mapas.gs')
     #os.remove(os.path.join(os.path.dirname(__file__), path, 'ctl.ctl'))
+
+def download_chuva():
+    if(erro == 0):
+        zip = zipfile.ZipFile(os.path.join(os.path.dirname(__file__), out_path, out_file_name))
+        fn_list = zip.namelist()
+        zip.extractall(os.path.join(os.path.dirname(__file__), out_path))
+        zip.close()
+        os.remove(os.path.join(os.path.dirname(__file__), out_path, out_file_name))
+        folder_list = os.listdir(os.path.join(os.path.dirname(__file__), out_path))
+        td = datetime.date.fromordinal(today())
+        dt_comp = 'ETA40_p' + (('00' + str(td.day))[-2:] + ('00' + str(td.month))[-2:] + str(td.year)[-2:]) + 'a'
 
 def download_chuva_ocorrida_cptec(out_files_path):
     erro = 0
@@ -310,18 +376,17 @@ def download_chuva_ocorrida_cptec(out_files_path):
 
 def download_chuva_eta40_ons(out_path, url_eta):
     eta_index = tuple((x * 157 + i) for i in range(156+1) for x in range(143+1))
-    url_eta = 'http://pactoenergia.com.br/mdl/mapas/' + url_eta
-    out_file_name = 'eta40.zip'
+    #url_eta = 'http://pactoenergia.com.br/mdl/mapas/' + url_eta
+    #out_file_name = 'eta40.zip'
     erro = 0
     folder_list = os.listdir(os.path.join(os.path.dirname(__file__), out_path))
     for fn in folder_list:
-        #if (fn[0:6] == 'ETA40_'):
         os.remove(os.path.join(os.path.dirname(__file__), out_path, fn))
     try:
-        urllib.request.urlretrieve(url_eta, os.path.join(os.path.dirname(__file__), out_path, out_file_name))
+        os.path.isfile(os.path.join(os.path.dirname(__file__), out_path, fn))
     except:
         erro += 1
-        print('   Erro - download_chuva: Nao foi possivel acessar o link para chuva do ETA')
+        print('Erro - arquivo_chuva: Nao foi possivel localizar o arquivo de chuva do ETA')
         print('   ' + url_eta)
     if(erro == 0):
         zip = zipfile.ZipFile(os.path.join(os.path.dirname(__file__), out_path, out_file_name))
@@ -343,6 +408,7 @@ def download_chuva_eta40_ons(out_path, url_eta):
                 eta = open(os.path.join(os.path.dirname(__file__), out_path, fn), 'rt')
                 eta_read = eta.readlines()
                 bin_file = open(os.path.join(os.path.dirname(__file__), out_path, fn[0:len(fn) - 4] + '.bin'), 'wb')
+                
                 ##########################################
                 eta_cnt = 0
                 for _ in range(0, 157):
@@ -351,6 +417,7 @@ def download_chuva_eta40_ons(out_path, url_eta):
                             bin_file.write(struct.pack('f', float(eta_read[eta_index[eta_cnt]][14:19])))
                         eta_cnt += 1
                 #########################################
+                
                 eta.close()
                 bin_file.close()
                 os.remove(os.path.join(os.path.dirname(__file__), out_path, fn))
@@ -449,7 +516,38 @@ def download_chuva_ecmwf_ons(out_path, url_ecmwf):
     else:
         return 0
 
+def soma_arq_bin(in_files_path, in_files_list, out_file_path, out_file_name, size):
+    if(not os.path.exists(os.path.join(os.path.dirname(__file__), in_files_path))):
+        print('   Erro - soma_arq_bin: Pasta com arquivos de entrada nao existe')
+    else:
+        os.chdir(os.path.join(os.path.dirname(__file__), in_files_path))
+        not_found_error = 0
+        for fn in in_files_list:
+            if (not os.path.isfile(os.path.join(os.path.dirname(__file__), in_files_path, fn))):
+                not_found_error += 1
+                print('   Erro - soma_arq_bin: Arquivo %s nao encontrado' % fn)
+        if(not_found_error > 0):
+            return 0
+        else:
+            soma = []
+            for a in range(size):
+                soma.append(0)
+            for fn in in_files_list:
+                fbin = open(fn, "rb")
+                for cnt_aux in range(0, size):
+                    tmp = struct.unpack('f', fbin.read(4))[0]
+                    soma[cnt_aux] += tmp
+                fbin.close()
+                #print('   Arquivo somado: %s' %fn)
+            fsoma = open(os.path.join(os.path.dirname(__file__), out_file_path, out_file_name), "wb")
+            for a in range(size):
+                fsoma.write(struct.pack('f', soma[a]))
+            fsoma.close()
+            return 1
+
 def create_name_list(opt):
+    #Funcao que cria o titulo com o nome dos mapas e as semanas
+
     names_list = []
     td = datetime.date.fromordinal(today())
     if(opt == 0):
@@ -500,12 +598,13 @@ def str_dt(opt = 0):
     return ('00' + str(date_aux.day))[-2:] + '/' + ('00' + str(date_aux.month))[-2:] + '/' + str(date_aux.year)
 
 def verify_folder(folder):
-    #Verifica se existe a pasta de execução
+
+    #Verifica se existe a pasta de execução e cria
     if not os.path.exists(os.path.join(os.path.dirname(__file__), folder)):
         os.makedirs(os.path.join(os.path.dirname(__file__), folder))
 
 def upload_zips(path_name):
-    time.sleep(15)
+    time.sleep(30)
     folder_list = os.listdir(path_name)
     upload_list = [f for f in folder_list if f.endswith('.zip')]
     ftp = ftplib.FTP('pactoenergia.com.br', 'mdl@pactoenergia.com.br', '29!pAcTo+16')
@@ -601,8 +700,12 @@ def edit_log_file(descrpt, info):
     #upload_file('', 'log.txt')
 
 def read_log_file(descrpt):
+
+    # Verifica existencia do arquivo de log
     if not os.path.isfile(os.path.join(os.path.dirname(__file__), 'log.txt')):
         open(os.path.join(os.path.dirname(__file__), 'log.txt'), 'x')
+
+    # Abre e le o arquivo de log
     file = open(os.path.join(os.path.dirname(__file__), 'log.txt'), 'rt')
     file_buff = file.readlines()
     find = 0
@@ -618,6 +721,8 @@ def read_log_file(descrpt):
         return (id)
 
 def log_date(descrpt):
+
+    # Le o arquivo de log e retorna a data de atualizacao do modelo
     aux = read_log_file(descrpt)
     if(aux != 0):
         return datetime.date.toordinal(datetime.date(int(aux[1][0:4]), int(aux[1][5:7]), int(aux[1][8:10])))
@@ -656,30 +761,33 @@ def mapas():
         print("   ---------------------------------------------------------------")
 
         #Limpar pasta de downloads
-        download_foler = 'C:/Users/mateus.mendonca/Downloads'
-        for file in os.listdir(download_foler):
-            os.remove(os.path.join(download_foler, file))
+        # download_folder = 'C:/Users/Mateus Mendonca/Downloads'
+        # for file in os.listdir(download_folder):
+        #     os.remove(os.path.join(download_foler, file))
 
         #Baixar dados de previsão de chuva do ONS - SINtegre e carregar para PACTO
         options = Options()
-        options.add_argument('--window-position=10000,0')
-        driver = webdriver.Chrome(executable_path='C:/Users/mateus.mendonca/Documents/chromedriver.exe', options=options)
+        # options.add_argument('--window-position=10000,0')
+        driver = webdriver.Chrome(executable_path='C:/Users/Mateus Mendonca/Downloads/chromedriver.exe', options=options)
         
         try:
             driver.get('https://sintegre.ons.org.br')
-            assert 'ONS' in driver.title
+            #assert 'ONS' in driver.title
+
+            usuario = 'mateus.mendonca'
+            senha = 'EngEletrica2009'
 
             elem = driver.find_element_by_name('username')
-            elem.send_keys('mateus.mendonca')
+            elem.send_keys(usuario + Keys.RETURN)
             elem = driver.find_element_by_name('password')
-            elem.send_keys('Energia2019' + Keys.RETURN)
+            elem.send_keys(senha + Keys.RETURN)
 
             PATH = 'https://sintegre.ons.org.br/sites/9/38/Documents/images/operacao_integrada/meteorologia/'
             driver.get(PATH + 'eta/Eta40_precipitacao10d.zip')
             driver.get(PATH + 'global/GEFS_precipitacao14d.zip')
             driver.get(PATH + 'ecmwf/ECMWF_precipitacao14d.zip')
 
-            upload_zips('C:/Users/mateus.mendonca/Downloads')
+            upload_zips('C:/Users/Mateus Mendonca/Downloads')
             driver.quit()
         except:
             driver.quit()
@@ -791,7 +899,7 @@ def mapas():
             edit_log_file('Mapas_ECMWF', '')
 
         #Faz o upload dos mapas gerados
-        upload_mapas() 
+        #upload_mapas() 
 
         #Atualiza log dos mapas
         condicoes = [
